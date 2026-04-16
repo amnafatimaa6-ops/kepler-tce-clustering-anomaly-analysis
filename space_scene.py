@@ -5,18 +5,18 @@ def create_cinematic_galaxy(df):
 
     fig = go.Figure()
 
-    # background stars (fake deep space field)
-    n_stars = 800
+    # 🌟 STAR FIELD BACKGROUND
+    n_stars = 1200
     fig.add_trace(go.Scatter3d(
-        x=np.random.normal(0, 300, n_stars),
-        y=np.random.normal(0, 300, n_stars),
-        z=np.random.normal(0, 300, n_stars),
-        mode='markers',
-        marker=dict(size=1, color="white", opacity=0.2),
+        x=np.random.normal(0, 400, n_stars),
+        y=np.random.normal(0, 400, n_stars),
+        z=np.random.normal(0, 400, n_stars),
+        mode="markers",
+        marker=dict(size=1, color="white", opacity=0.15),
         name="Star Field"
     ))
 
-    # clusters (glowing planets / systems)
+    # 🪐 CLUSTERS (galaxies / systems)
     colors = ["cyan", "magenta", "yellow", "lime"]
 
     for c in df["cluster"].unique():
@@ -30,12 +30,12 @@ def create_cinematic_galaxy(df):
             marker=dict(
                 size=2.5,
                 color=colors[c % len(colors)],
-                opacity=0.7
+                opacity=0.75
             ),
             name=f"System {c}"
         ))
 
-    # anomalies = SUPER NOVA STYLE
+    # ⚠ ANOMALIES (cosmic events)
     anomaly = df[df["anomaly"] == -1]
 
     fig.add_trace(go.Scatter3d(
@@ -46,12 +46,13 @@ def create_cinematic_galaxy(df):
         marker=dict(
             size=6,
             color="red",
-            opacity=0.9,
-            symbol="x"
+            symbol="x",
+            opacity=0.9
         ),
-        name="⚠ Cosmic Anomaly"
+        name="Cosmic Anomaly"
     ))
 
+    # 🌌 DARK SPACE STYLE
     fig.update_layout(
         paper_bgcolor="black",
         plot_bgcolor="black",
@@ -64,7 +65,7 @@ def create_cinematic_galaxy(df):
             bgcolor="black"
         ),
 
-        title="🌌 EXOGALAXY — LIVE COSMIC ML UNIVERSE",
+        title="🌌 EXOGALAXY — CINEMATIC AI UNIVERSE",
         font=dict(color="white")
     )
 
