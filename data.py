@@ -17,10 +17,30 @@ def load_nasa_data(limit=200):
         "format": "csv"
     })
 
+    # 🧠 safety check
+    if response.status_code != 200 or len(response.text.strip()) == 0:
+        raise ValueError("NASA API failed or returned empty data")
+
     df = pd.read_csv(StringIO(response.text))
 
-    df.columns = ["name", "period", "radius", "temp"]
+    # 🧼 clean column names safely
+    df.columns = [c.strip().lower() for c in df.columns]
 
-    # clean
+    # 🧠 rename only if columns exist
+    rename_map = {
+        "pl_name": "name",
+        "pl_orbper": "period",
+        "pl_rade": "radius",
+        "pl_eqt": "temp"
+    }
+
+    df = df.rename(columns=rename_map)
+
+    # keep only required columns safely
+    required = ["name", "period", "radius", "temp"]
+    df = df[[c for c in required if c in df.columns]]
+
+    # drop missing
     df = df.dropna()
+
     return df
