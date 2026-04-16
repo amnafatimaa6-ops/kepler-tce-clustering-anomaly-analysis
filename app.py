@@ -1,72 +1,59 @@
-import plotly.graph_objects as go
-import numpy as np
+import streamlit as st
+import model
+from space_scene import create_cinematic_galaxy
 
-def create_cinematic_galaxy(df):
+st.set_page_config(
+    page_title="ExoGalaxy",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-    fig = go.Figure()
+# 🎨 FULL BLACK HOLE UI
+st.markdown("""
+<style>
+    body {
+        background-color: black;
+    }
 
-    # 🌟 STAR FIELD BACKGROUND
-    n_stars = 1200
-    fig.add_trace(go.Scatter3d(
-        x=np.random.normal(0, 400, n_stars),
-        y=np.random.normal(0, 400, n_stars),
-        z=np.random.normal(0, 400, n_stars),
-        mode="markers",
-        marker=dict(size=1, color="white", opacity=0.15),
-        name="Star Field"
-    ))
+    .main {
+        background-color: black;
+    }
 
-    # 🪐 CLUSTERS (galaxies / systems)
-    colors = ["cyan", "magenta", "yellow", "lime"]
+    h1 {
+        color: white;
+        text-align: center;
+        font-size: 42px;
+        letter-spacing: 3px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-    for c in df["cluster"].unique():
-        d = df[df["cluster"] == c]
+# 🌌 TITLE
+st.title("🌌 EXOGALAXY — CINEMATIC SPACE AI")
 
-        fig.add_trace(go.Scatter3d(
-            x=d["x"],
-            y=d["y"],
-            z=d["z"],
-            mode="markers",
-            marker=dict(
-                size=2.5,
-                color=colors[c % len(colors)],
-                opacity=0.75
-            ),
-            name=f"System {c}"
-        ))
+st.markdown("""
+<div style="
+    text-align:center;
+    color:#00ffcc;
+    font-size:14px;
+    margin-bottom:20px;
+">
+LIVE SIMULATION • DEEP SPACE ML ENGINE • ANOMALY DETECTION SYSTEM
+</div>
+""", unsafe_allow_html=True)
 
-    # ⚠ ANOMALIES (cosmic events)
-    anomaly = df[df["anomaly"] == -1]
+# ⏳ LOADING FEEL
+with st.spinner("Initializing cosmic neural grid..."):
+    df = model.generate_space_data(2500)
 
-    fig.add_trace(go.Scatter3d(
-        x=anomaly["x"],
-        y=anomaly["y"],
-        z=anomaly["z"],
-        mode="markers",
-        marker=dict(
-            size=6,
-            color="red",
-            symbol="x",
-            opacity=0.9
-        ),
-        name="Cosmic Anomaly"
-    ))
+# 🌠 GENERATE SPACE
+fig = create_cinematic_galaxy(df)
 
-    # 🌌 DARK SPACE STYLE
-    fig.update_layout(
-        paper_bgcolor="black",
-        plot_bgcolor="black",
-        margin=dict(l=0, r=0, t=0, b=0),
+st.plotly_chart(fig, use_container_width=True)
 
-        scene=dict(
-            xaxis=dict(visible=False),
-            yaxis=dict(visible=False),
-            zaxis=dict(visible=False),
-            bgcolor="black"
-        ),
-
-        title="🌌 EXOGALAXY — CINEMATIC AI UNIVERSE",
-        font=dict(color="white")
-    )
-
-    return fig
+# 🧠 INSIGHTS PANEL
+st.markdown("## 🧠 Mission Control")
+st.write("• White dots = background stars (deep space field)")
+st.write("• Colored clusters = exoplanet-like systems detected via ML")
+st.write("• Red X = cosmic anomalies (Isolation Forest outliers)")
+st.write("• Data is fully synthetic but modeled on Kepler-style structure")
