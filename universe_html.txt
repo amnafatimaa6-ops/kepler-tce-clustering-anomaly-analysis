@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ExoGalaxy</title>
+
+  <style>
+    body { margin: 0; overflow: hidden; background: black; }
+    canvas { display: block; }
+  </style>
+</head>
+
+<body>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+
+<script>
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
+const camera = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  2000
+);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+camera.position.z = 60;
+
+// ⭐ STARS
+function stars() {
+  const geo = new THREE.BufferGeometry();
+  const points = [];
+
+  for (let i = 0; i < 10000; i++) {
+    points.push(
+      (Math.random() - 0.5) * 2000,
+      (Math.random() - 0.5) * 2000,
+      (Math.random() - 0.5) * 2000
+    );
+  }
+
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(points, 3));
+
+  const mat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.2 });
+
+  const starField = new THREE.Points(geo, mat);
+  scene.add(starField);
+}
+
+stars();
+
+// 🪐 PLANETS
+function planet(x, y, z, color, size) {
+  const geo = new THREE.SphereGeometry(size, 32, 32);
+  const mat = new THREE.MeshBasicMaterial({ color });
+
+  const p = new THREE.Mesh(geo, mat);
+  p.position.set(x, y, z);
+  scene.add(p);
+}
+
+planet(0, 0, -40, 0xffff00, 5);      // Sun
+planet(18, 5, -60, 0x00aaff, 2);     // Earth
+
+// 🚨 ANOMALIES
+planet(-25, -10, -90, 0xff0033, 1.5);
+planet(30, 15, -120, 0xff00ff, 2);
+
+function animate() {
+  requestAnimationFrame(animate);
+  scene.rotation.y += 0.001;
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+</script>
+
+</body>
+</html>
