@@ -1,51 +1,40 @@
 import streamlit as st
-import sys, os
-
-# fix import issues on cloud
-sys.path.append(os.path.dirname(__file__))
-
 import model
-from space_scene import create_galaxy
+from space_scene import create_cinematic_galaxy
 
-st.set_page_config(
-    page_title="ExoGalaxy 3D",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+st.set_page_config(page_title="ExoGalaxy", layout="wide")
 
-# 🌌 dark space UI
-st.markdown(
-    """
-    <style>
+# FULL BLACK HOLE MODE UI
+st.markdown("""
+<style>
     body {
         background-color: black;
+    }
+
+    .main {
+        background-color: black;
+    }
+
+    h1 {
         color: white;
+        text-align: center;
+        font-size: 40px;
+        letter-spacing: 2px;
     }
-    .stApp {
-        background: radial-gradient(circle at center, #000010, #000000);
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+</style>
+""", unsafe_allow_html=True)
 
-st.title("🌌 ExoGalaxy 3D Universe Explorer")
+st.title("🌌 EXOGALAXY — CINEMATIC SPACE AI")
 
-st.write("Simulated cosmic ML universe — clusters + anomalies + galaxy structure")
+# loading animation feel
+with st.spinner("Scanning deep space signals..."):
+    df = model.generate_space_data(2500)
 
-# generate universe
-df = model.generate_space_data(2500)
+fig = create_cinematic_galaxy(df)
 
-# build 3D galaxy
-fig = create_galaxy(df)
-
-# render full screen
 st.plotly_chart(fig, use_container_width=True)
 
-# legend
-st.markdown("""
-### 🧠 Universe Legend
-- 🌟 Colored points → Galaxy clusters (different exoplanet regimes)  
-- ☄️ Red X → Anomalies (rare / extreme signals)  
-- 🌌 Space = simulated astrophysical coordinate system  
-""")
+st.markdown("### 🧠 Mission Control Insights")
+st.write("• White particles = background stars in deep space")
+st.write("• Colored clusters = gravitationally similar exoplanet systems")
+st.write("• Red X points = cosmic anomalies (rare ML-detected outliers)")
