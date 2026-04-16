@@ -1,10 +1,7 @@
-
-
 import json
 
 def render_universe(df):
-    data = df.to_dict(orient="records")
-    data_json = json.dumps(data)
+    data_json = json.dumps(df.to_dict(orient="records"))
 
     html = f"""
     <!DOCTYPE html>
@@ -14,17 +11,16 @@ def render_universe(df):
             body {{
                 margin: 0;
                 overflow: hidden;
-                background: radial-gradient(circle at center, #000010, #000000);
+                background: black;
             }}
-
             #info {{
                 position: absolute;
-                color: white;
                 top: 10px;
                 left: 10px;
-                font-family: Arial;
+                color: white;
                 z-index: 10;
-                background: rgba(0,0,0,0.4);
+                font-family: Arial;
+                background: rgba(0,0,0,0.5);
                 padding: 10px;
                 border-radius: 8px;
             }}
@@ -33,9 +29,8 @@ def render_universe(df):
 
     <body>
     <div id="info">
-        🌌 ExoGalaxy Explorer<br>
-        🔴 Red = Anomaly<br>
-        🔵 Cyan = Normal Signal
+        🌌 ExoGalaxy Live<br>
+        🔴 Anomalies | 🔵 Normal Signals
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
@@ -45,62 +40,67 @@ def render_universe(df):
 
         const camera = new THREE.PerspectiveCamera(
             75,
-            window.innerWidth / window.innerHeight,
+            window.innerWidth/window.innerHeight,
             0.1,
-            1000
+            2000
         );
-        camera.position.z = 6;
+
+        // ⭐ IMPORTANT FIX: move camera back MORE
+        camera.position.z = 120;
 
         const renderer = new THREE.WebGLRenderer({{ antialias: true }});
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // 🌟 STAR FIELD
-        for (let i = 0; i < 1500; i++) {{
+        // 🌟 STAR FIELD (bigger visibility)
+        for (let i = 0; i < 3000; i++) {{
             const star = new THREE.Mesh(
-                new THREE.SphereGeometry(0.01, 6, 6),
+                new THREE.SphereGeometry(0.2, 6, 6),
                 new THREE.MeshBasicMaterial({{ color: 0xffffff }})
             );
 
             star.position.set(
-                (Math.random() - 0.5) * 60,
-                (Math.random() - 0.5) * 60,
-                (Math.random() - 0.5) * 60
+                (Math.random() - 0.5) * 800,
+                (Math.random() - 0.5) * 800,
+                (Math.random() - 0.5) * 800
             );
 
             scene.add(star);
         }}
 
-        // 🌍 DATA
         const data = {data_json};
 
         data.forEach(p => {{
-            const color = p.anomaly === 1 ? 0xff0033 : 0x00ffff;
+            const isAnomaly = p.anomaly === 1;
+
+            const color = isAnomaly ? 0xff0033 : 0x00ffff;
 
             const planet = new THREE.Mesh(
-                new THREE.SphereGeometry(p.anomaly ? 0.06 : 0.03, 10, 10),
+                new THREE.SphereGeometry(isAnomaly ? 1.5 : 1.0, 10, 10),
                 new THREE.MeshBasicMaterial({{ color: color }})
             );
 
-            planet.position.x = p.x * 4;
-            planet.position.y = p.y * 4;
-            planet.position.z = p.z * 4;
+            // 🔥 IMPORTANT FIX: spread points wider
+            planet.position.x = p.x * 40;
+            planet.position.y = p.y * 40;
+            planet.position.z = p.z * 40;
 
             scene.add(planet);
         }});
 
-        // 🌌 ANIMATION (cinematic drift)
         function animate() {{
             requestAnimationFrame(animate);
-            scene.rotation.y += 0.0006;
-            scene.rotation.x += 0.0002;
+
+            scene.rotation.y += 0.001;
+            scene.rotation.x += 0.0004;
+
             renderer.render(scene, camera);
         }}
 
         animate();
 
         window.addEventListener('resize', () => {{
-            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.aspect = window.innerWidth/window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }});
