@@ -1,22 +1,17 @@
 import streamlit as st
+from model import generate_galaxy
 from universe import render_universe
 
-st.set_page_config(
-    page_title="ExoGalaxy v2",
-    layout="wide"
-)
+st.set_page_config(page_title="ExoGalaxy Explorer", layout="wide")
 
-st.title("🌌 ExoGalaxy v2 — Cosmic Intelligence System")
+st.title("🌌 ExoGalaxy 3D Universe Explorer")
 
-st.markdown("""
-### 🧠 What you're seeing:
-- 🟡 Sun system (reference star)
-- 🌍 Planets (stable exoplanets)
-- 🪐 Exoplanets (detected orbital bodies)
-- 🔴 Anomalies (unusual TCE signals)
-- ⭐ Star field (galactic background)
+df = generate_galaxy()
 
-This visualization represents **Kepler-style transit detection patterns** mapped into a 3D universe.
-""")
+st.markdown("### 🧠 Dataset simulated from astrophysical signal logic")
 
-render_universe()
+st.write(df.head())
+
+html = render_universe(df)
+
+st.components.v1.html(html, height=800)
