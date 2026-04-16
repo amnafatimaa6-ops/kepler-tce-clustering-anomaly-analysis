@@ -10,24 +10,27 @@ def render_universe():
 <style>
 body { margin:0; overflow:hidden; background:black; }
 canvas { display:block; }
-#info {
+#hud{
   position:absolute;
   top:10px;
   left:10px;
   color:white;
   font-family:Arial;
-  background:rgba(0,0,0,0.5);
-  padding:10px;
-  border-radius:10px;
+  background:rgba(0,0,0,0.6);
+  padding:12px;
+  border-radius:12px;
+  font-size:14px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="info">
-<b>ExoGalaxy System</b><br>
-Click + observe cosmic structure<br>
+<div id="hud">
+🌌 ExoGalaxy Realistic Mode<br>
+🟡 Sun = light source<br>
+🌍 Planets = orbiting bodies<br>
+🔴 Red = anomalies (ML outliers)
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
@@ -35,34 +38,35 @@ Click + observe cosmic structure<br>
 <script>
 
 // ======================
-// 🌌 SCENE SETUP
+// 🌌 SCENE
 // ======================
 const scene = new THREE.Scene();
+
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth/window.innerHeight,
   0.1,
-  3000
+  5000
 );
 
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-camera.position.z = 120;
+camera.position.z = 200;
 
 // ======================
-// ⭐ STAR FIELD (GALAXY)
+// ⭐ STAR BACKGROUND
 // ======================
-function createStars(){
+function stars(){
   const geo = new THREE.BufferGeometry();
   const pos = [];
 
-  for(let i=0;i<15000;i++){
+  for(let i=0;i<20000;i++){
     pos.push(
-      (Math.random()-0.5)*2500,
-      (Math.random()-0.5)*2500,
-      (Math.random()-0.5)*2500
+      (Math.random()-0.5)*4000,
+      (Math.random()-0.5)*4000,
+      (Math.random()-0.5)*4000
     );
   }
 
@@ -70,69 +74,106 @@ function createStars(){
 
   const mat = new THREE.PointsMaterial({
     color:0xffffff,
-    size:1.0
+    size:0.7,
+    transparent:true
   });
 
   scene.add(new THREE.Points(geo,mat));
 }
-createStars();
+stars();
 
 
 // ======================
-// 🪐 CELESTIAL OBJECTS
+// ☀️ SUN (REAL LIGHT SOURCE)
 // ======================
-function planet(x,y,z,color,size,name,type){
+const sunGeo = new THREE.SphereGeometry(18, 64, 64);
 
-  const geo = new THREE.SphereGeometry(size,32,32);
-  const mat = new THREE.MeshBasicMaterial({color:color});
-  const mesh = new THREE.Mesh(geo,mat);
+const sunMat = new THREE.MeshBasicMaterial({
+  color: 0xffcc33
+});
 
-  mesh.position.set(x,y,z);
-  mesh.userData = {name,type};
+const sun = new THREE.Mesh(sunGeo, sunMat);
+scene.add(sun);
 
-  scene.add(mesh);
+// REAL LIGHT FROM SUN
+const light = new THREE.PointLight(0xffffff, 3, 2000);
+light.position.set(0,0,0);
+scene.add(light);
+
+
+// ======================
+// 🌍 PLANET FUNCTION (REALISTIC)
+// ======================
+function createPlanet(size, color, distance, speed, name){
+
+  const geo = new THREE.SphereGeometry(size, 64, 64);
+
+  const mat = new THREE.MeshStandardMaterial({
+    color: color,
+    roughness: 0.7,
+    metalness: 0.1
+  });
+
+  const mesh = new THREE.Mesh(geo, mat);
+
+  const pivot = new THREE.Object3D();
+  scene.add(pivot);
+
+  mesh.position.x = distance;
+  pivot.add(mesh);
+
+  return {mesh, pivot, speed, name};
 }
 
-// ======================
-// ☀️ STAR SYSTEM
-// ======================
-planet(0,0,0,0xffff00,10,"Sun","star");
-
-// 🌍 PLANETS (NORMAL EXOPLANETS)
-planet(40,10,-80,0x00aaff,3,"Kepler-22b","planet");
-planet(-60,-20,-120,0x00ffcc,2.5,"Kepler-69c","planet");
-
-// 🌙 MOON SYSTEM
-planet(50,15,-85,0x888888,1,"Moon-1","moon");
 
 // ======================
-// 🔴 ANOMALIES (YOUR ML OUTPUT)
+// 🌍 NORMAL PLANETS
 // ======================
-// These represent:
-// - extreme depth
-// - abnormal SNR
-// - unusual orbital period
-
-planet(-80,30,-150,0xff0000,3,"ANOMALY-1","anomaly");
-planet(90,-40,-200,0xff0066,4,"ANOMALY-2","anomaly");
-planet(-120,60,-260,0xff3300,2.5,"ANOMALY-3","anomaly");
+const earth = createPlanet(5, 0x2a6cff, 60, 0.01, "Earth");
+const venus = createPlanet(4, 0xff9966, 90, 0.008, "Venus");
+const mars  = createPlanet(4.5, 0xff5533, 120, 0.006, "Mars");
 
 
 // ======================
-// 🌀 ROTATION (GALAXY FEEL)
+// 🌙 MOON (EARTH)
+// ======================
+const moon = createPlanet(1.5, 0xaaaaaa, 10, 0.03, "Moon");
+earth.mesh.add(moon.mesh);
+
+
+// ======================
+// 🔴 ANOMALIES (ML OUTLIERS)
+// ======================
+const anomaly1 = createPlanet(6, 0xff0033, 160, 0.004, "Anomaly-1");
+const anomaly2 = createPlanet(7, 0xff00aa, 210, 0.003, "Anomaly-2");
+
+
+// ======================
+// 🌌 ANIMATION LOOP
 // ======================
 function animate(){
+
   requestAnimationFrame(animate);
 
-  scene.rotation.y += 0.0008;
+  // planet orbits
+  earth.pivot.rotation.y += earth.speed;
+  venus.pivot.rotation.y += venus.speed;
+  mars.pivot.rotation.y += mars.speed;
+
+  anomaly1.pivot.rotation.y += anomaly1.speed;
+  anomaly2.pivot.rotation.y += anomaly2.speed;
+
+  // slow galaxy rotation
+  scene.rotation.y += 0.0003;
 
   renderer.render(scene,camera);
 }
+
 animate();
 
 
 // ======================
-// 📱 RESIZE
+// 📱 RESPONSIVE
 // ======================
 window.addEventListener("resize",()=>{
   camera.aspect = window.innerWidth/window.innerHeight;
