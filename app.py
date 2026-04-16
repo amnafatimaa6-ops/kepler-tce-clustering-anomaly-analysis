@@ -1,49 +1,38 @@
 import streamlit as st
-import plotly.express as px
 import pandas as pd
+import plotly.express as px
 
-from model import load_data, preprocess, train_models, FEATURES
+from model import load_data
 
-st.set_page_config(page_title="ExoCluster Explorer", layout="wide")
+st.set_page_config(page_title="Exo Galaxy Explorer", layout="wide")
 
-st.title("🌌 Exoplanet Signal 3D Explorer")
+st.title("🌌 Exoplanet 3D Galaxy Explorer (LIVE NASA DATA)")
 
-# Load data
-df = load_data("data.csv")
-df, X, X_scaled = preprocess(df)
+# Load live data
+df = load_data()
 
-clusters, anomalies, X_pca = train_models(X_scaled, X.index)
+# rename for clarity
+df = df.rename(columns={
+    "pl_orbper": "orbital_period",
+    "pl_rade": "radius",
+    "pl_bmasse": "mass"
+})
 
-# Attach results
-df = df.loc[X.index].copy()
-df["cluster"] = clusters
-df["anomaly"] = anomalies
-df["x"] = X_pca[:, 0]
-df["y"] = X_pca[:, 1]
-df["z"] = X_pca[:, 2]
+# drop missing
+df = df.dropna()
 
-# Sidebar filters
-st.sidebar.header("Controls")
-show_anomalies = st.sidebar.checkbox("Show anomalies", True)
-
-plot_df = df.copy()
-if not show_anomalies:
-    plot_df = plot_df[plot_df["anomaly"] == 1]
-
-# 3D scatter
+# 3D plot
 fig = px.scatter_3d(
-    plot_df,
-    x="x",
-    y="y",
-    z="z",
-    color="cluster",
-    symbol="anomaly",
-    hover_data=FEATURES,
-    title="3D Exoplanet Signal Space"
+    df,
+    x="orbital_period",
+    y="radius",
+    z="mass",
+    hover_name="pl_name",
+    color="radius",
+    title="Real Exoplanets in 3D Space"
 )
 
 st.plotly_chart(fig, use_container_width=True)
 
-# Stats panel
-st.subheader("📊 Cluster Summary")
-st.dataframe(plot_df.groupby("cluster")[FEATURES].mean())
+st.subheader("📊 Dataset Snapshot")
+st.write(df.head())
