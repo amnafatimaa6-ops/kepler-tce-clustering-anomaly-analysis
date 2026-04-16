@@ -1,3 +1,4 @@
+
 import plotly.graph_objects as go
 
 def create_galaxy(df):
@@ -6,8 +7,8 @@ def create_galaxy(df):
 
     fig = go.Figure()
 
-    # normal stars
-    for c in df["cluster"].unique():
+    # 🌟 normal galaxy clusters
+    for c in sorted(df["cluster"].unique()):
         d = df[df["cluster"] == c]
 
         fig.add_trace(go.Scatter3d(
@@ -15,11 +16,15 @@ def create_galaxy(df):
             y=d["y"],
             z=d["z"],
             mode="markers",
-            marker=dict(size=2, color=colors[c % len(colors)]),
+            marker=dict(
+                size=2,
+                color=colors[c % len(colors)],
+                opacity=0.7
+            ),
             name=f"Cluster {c}"
         ))
 
-    # anomalies (red supernova vibes)
+    # ☄️ anomalies (rare cosmic events)
     anomaly = df[df["anomaly"] == -1]
 
     fig.add_trace(go.Scatter3d(
@@ -27,7 +32,12 @@ def create_galaxy(df):
         y=anomaly["y"],
         z=anomaly["z"],
         mode="markers",
-        marker=dict(size=5, color="red", symbol="x"),
+        marker=dict(
+            size=5,
+            color="red",
+            symbol="x",
+            opacity=0.9
+        ),
         name="Anomalies"
     ))
 
@@ -35,11 +45,13 @@ def create_galaxy(df):
         paper_bgcolor="black",
         plot_bgcolor="black",
         margin=dict(l=0, r=0, t=0, b=0),
+
         scene=dict(
-            xaxis=dict(backgroundcolor="black"),
-            yaxis=dict(backgroundcolor="black"),
-            zaxis=dict(backgroundcolor="black"),
+            xaxis=dict(showbackground=False),
+            yaxis=dict(showbackground=False),
+            zaxis=dict(showbackground=False),
         ),
+
         title="🌌 ExoGalaxy 3D Universe Explorer"
     )
 
