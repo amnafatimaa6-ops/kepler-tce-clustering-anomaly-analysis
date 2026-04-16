@@ -6,12 +6,8 @@ st.set_page_config(page_title="ExoGalaxy Explorer", layout="wide")
 
 st.title("🌌 ExoGalaxy 3D Universe Explorer")
 
-df = generate_galaxy()
-
-st.markdown("### 🧠 Dataset simulated from astrophysical signal logic")
-
-st.write(df.head())
+df = generate_galaxy(800)  # keep smaller for stability
 
 html = render_universe(df)
 
-st.components.v1.html(html, height=800)
+st.components.v1.html(html, height=850, scrolling=False)
