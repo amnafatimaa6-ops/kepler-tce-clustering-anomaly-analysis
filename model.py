@@ -1,22 +1,21 @@
-import pandas as pd
-import requests
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.ensemble import IsolationForest
 
-FEATURES = ["pl_orbper", "pl_rade", "pl_bmasse"]
+def process_data(df):
 
-def load_data():
-    url = (
-        "https://exoplanetarchive.ipac.caltech.edu/TAP/sync?"
-        "query=select+top+2000+pl_name,pl_orbper,pl_rade,pl_bmasse+from+ps&format=csv"
-    )
+    features = df[["period", "radius", "temp"]].copy()
 
-    df = pd.read_csv(url)
+    scaler = StandardScaler()
+    X = scaler.fit_transform(features)
 
-    # clean
-    df = df.dropna()
+    # clustering
+    kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
+    df["cluster"] = kmeans.fit_predict(X)
 
-    return df
+    # anomaly detection
+    iso = IsolationForest(contamination=0.05, random_state=42)
+    df["anomaly"] = iso.fit_predict(X)
 
-
-def get_features(df):
-    X = df[FEATURES]
-    return X
+    return df, X
