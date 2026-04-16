@@ -1,14 +1,25 @@
-
 import plotly.graph_objects as go
+import numpy as np
 
-def create_galaxy(df):
-
-    colors = ["cyan", "magenta", "yellow", "lime"]
+def create_cinematic_galaxy(df):
 
     fig = go.Figure()
 
-    # 🌟 normal galaxy clusters
-    for c in sorted(df["cluster"].unique()):
+    # background stars (fake deep space field)
+    n_stars = 800
+    fig.add_trace(go.Scatter3d(
+        x=np.random.normal(0, 300, n_stars),
+        y=np.random.normal(0, 300, n_stars),
+        z=np.random.normal(0, 300, n_stars),
+        mode='markers',
+        marker=dict(size=1, color="white", opacity=0.2),
+        name="Star Field"
+    ))
+
+    # clusters (glowing planets / systems)
+    colors = ["cyan", "magenta", "yellow", "lime"]
+
+    for c in df["cluster"].unique():
         d = df[df["cluster"] == c]
 
         fig.add_trace(go.Scatter3d(
@@ -17,14 +28,14 @@ def create_galaxy(df):
             z=d["z"],
             mode="markers",
             marker=dict(
-                size=2,
+                size=2.5,
                 color=colors[c % len(colors)],
                 opacity=0.7
             ),
-            name=f"Cluster {c}"
+            name=f"System {c}"
         ))
 
-    # ☄️ anomalies (rare cosmic events)
+    # anomalies = SUPER NOVA STYLE
     anomaly = df[df["anomaly"] == -1]
 
     fig.add_trace(go.Scatter3d(
@@ -33,12 +44,12 @@ def create_galaxy(df):
         z=anomaly["z"],
         mode="markers",
         marker=dict(
-            size=5,
+            size=6,
             color="red",
-            symbol="x",
-            opacity=0.9
+            opacity=0.9,
+            symbol="x"
         ),
-        name="Anomalies"
+        name="⚠ Cosmic Anomaly"
     ))
 
     fig.update_layout(
@@ -47,12 +58,14 @@ def create_galaxy(df):
         margin=dict(l=0, r=0, t=0, b=0),
 
         scene=dict(
-            xaxis=dict(showbackground=False),
-            yaxis=dict(showbackground=False),
-            zaxis=dict(showbackground=False),
+            xaxis=dict(visible=False),
+            yaxis=dict(visible=False),
+            zaxis=dict(visible=False),
+            bgcolor="black"
         ),
 
-        title="🌌 ExoGalaxy 3D Universe Explorer"
+        title="🌌 EXOGALAXY — LIVE COSMIC ML UNIVERSE",
+        font=dict(color="white")
     )
 
     return fig
