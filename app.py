@@ -1,38 +1,68 @@
 import streamlit as st
-import pandas as pd
-import plotly.express as px
+import plotly.graph_objects as go
 
-from model import load_data
+from data import load_nasa_data
+from model import process_data
 
-st.set_page_config(page_title="Exo Galaxy Explorer", layout="wide")
+st.set_page_config(page_title="ExoGalaxy", layout="wide")
 
-st.title("🌌 Exoplanet 3D Galaxy Explorer (LIVE NASA DATA)")
+st.title("🌌 ExoGalaxy 3D Universe Explorer")
 
-# Load live data
-df = load_data()
+# Load live NASA data
+df = load_nasa_data(limit=200)
+df, X = process_data(df)
 
-# rename for clarity
-df = df.rename(columns={
-    "pl_orbper": "orbital_period",
-    "pl_rade": "radius",
-    "pl_bmasse": "mass"
-})
+# 🎯 3D Mapping (SPACE TRANSFORMATION)
+df["x"] = df["period"] * 0.02
+df["y"] = df["radius"] * 20
+df["z"] = df["temp"] * 0.1
 
-# drop missing
-df = df.dropna()
+# 🎨 Colors
+colors = []
+sizes = []
 
-# 3D plot
-fig = px.scatter_3d(
-    df,
-    x="orbital_period",
-    y="radius",
-    z="mass",
-    hover_name="pl_name",
-    color="radius",
-    title="Real Exoplanets in 3D Space"
+for a, r, s in zip(df["anomaly"], df["radius"], df["temp"]):
+    if a == -1:
+        colors.append("red")     # anomaly = dangerous star
+        sizes.append(6)
+    else:
+        colors.append("white")   # normal star
+        sizes.append(3)
+
+# 🌌 FIGURE
+fig = go.Figure()
+
+fig.add_trace(go.Scatter3d(
+    x=df["x"],
+    y=df["y"],
+    z=df["z"],
+    mode="markers",
+    marker=dict(
+        size=sizes,
+        color=colors,
+        opacity=0.85
+    ),
+    text=df["name"],
+    hovertemplate="""
+    <b>%{text}</b><br>
+    Orbit: %{x:.2f}<br>
+    Size: %{y:.2f}<br>
+    Temp: %{z:.2f}<extra></extra>
+    """
+))
+
+# 🪐 Styling = space vibe
+fig.update_layout(
+    paper_bgcolor="black",
+    plot_bgcolor="black",
+    margin=dict(l=0, r=0, t=0, b=0),
+    scene=dict(
+        xaxis=dict(title="Orbit Distance", color="white"),
+        yaxis=dict(title="Planet Radius", color="white"),
+        zaxis=dict(title="Temperature", color="white"),
+        bgcolor="black"
+    ),
+    font=dict(color="white")
 )
 
 st.plotly_chart(fig, use_container_width=True)
-
-st.subheader("📊 Dataset Snapshot")
-st.write(df.head())
