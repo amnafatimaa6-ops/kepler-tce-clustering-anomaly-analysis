@@ -4,9 +4,7 @@ from universe import render_universe
 
 st.set_page_config(layout="wide")
 
-st.title("🌌 ExoGalaxy Explorer")
-
-df = generate_galaxy(600)  # IMPORTANT: keep moderate size
+df = generate_galaxy(800)
 
 html = render_universe(df)
 
