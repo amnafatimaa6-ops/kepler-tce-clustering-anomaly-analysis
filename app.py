@@ -4,62 +4,139 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import time
+import random
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.ensemble import IsolationForest
 from sklearn.decomposition import PCA
 
-# -------------------------
-# DATA SIMULATION (since dataset lost)
-# -------------------------
-np.random.seed(42)
+# =========================
+# PAGE CONFIG
+# =========================
+st.set_page_config(
+    page_title="NASA MISSION CONTROL v2",
+    layout="wide"
+)
 
-n = 2500
-df = pd.DataFrame({
-    "tce_period": np.random.lognormal(3, 1, n),
-    "tce_depth": np.random.lognormal(7, 1.2, n),
-    "tce_duration": np.abs(np.random.normal(5, 2, n)),
-    "tce_model_snr": np.random.lognormal(2, 1, n)
-})
+# =========================
+# UI STYLE (SPACE THEME)
+# =========================
+st.markdown("""
+<style>
+.stApp {
+    background: radial-gradient(circle at bottom, #02040a, #000000);
+    color: white;
+}
 
+.block-container {
+    padding: 2rem;
+    border-radius: 16px;
+    background: rgba(0,255,255,0.03);
+    box-shadow: 0 0 20px rgba(0,255,255,0.08);
+}
+
+h1, h2, h3 {
+    text-shadow: 0px 0px 10px rgba(0,255,255,0.3);
+}
+</style>
+""", unsafe_allow_html=True)
+
+# =========================
+# SESSION STATE (IMPORTANT FIX)
+# =========================
+if "tick" not in st.session_state:
+    st.session_state.tick = 0
+
+if "logs" not in st.session_state:
+    st.session_state.logs = []
+
+if "df" not in st.session_state:
+    np.random.seed(42)
+    n = 2500
+    st.session_state.df = pd.DataFrame({
+        "tce_period": np.random.lognormal(3, 1, n),
+        "tce_depth": np.random.lognormal(7, 1.2, n),
+        "tce_duration": np.abs(np.random.normal(5, 2, n)),
+        "tce_model_snr": np.random.lognormal(2, 1, n)
+    })
+
+df = st.session_state.df
+
+# =========================
+# ML PIPELINE
+# =========================
 features = ["tce_period", "tce_depth", "tce_model_snr"]
 
-# -------------------------
-# ML PIPELINE
-# -------------------------
 X = df[features]
 
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
 df["cluster"] = KMeans(n_clusters=4, random_state=42).fit_predict(X_scaled)
-df["anomaly"] = IsolationForest(contamination=0.05).fit_predict(X_scaled)
+df["anomaly"] = IsolationForest(contamination=0.05, random_state=42).fit_predict(X_scaled)
 
-# -------------------------
-# PCA SPACE (INTELLIGENCE MAP)
-# -------------------------
+# PCA
 pca = PCA(n_components=2)
 X_pca = pca.fit_transform(X_scaled)
-
 df["pc1"] = X_pca[:, 0]
 df["pc2"] = X_pca[:, 1]
 
-# =========================================================
-# 🌌 ORBITAL 3D ENGINE (UPGRADED)
-# =========================================================
-st.subheader("🪐 ORBITAL SIGNAL FIELD — DEEP SPACE VIEW")
+# =========================
+# TITLE
+# =========================
+st.title("🛰️ NASA MISSION CONTROL — SIMULATOR v2")
+st.caption("Exoplanet Signal Intelligence + Live Telemetry + AI Pattern Mining")
+
+# =========================
+# CONTROL PANEL
+# =========================
+st.sidebar.title("📡 CONTROL PANEL")
+mode = st.sidebar.radio("System Mode", ["LIVE ORBIT SIMULATION", "MISSION LOGS"])
+
+# =========================
+# LIVE TELEMETRY ENGINE
+# =========================
+telemetry_pool = [
+    "Mapping exoplanet density clusters...",
+    "Filtering cosmic noise interference...",
+    "Updating orbital trajectory models...",
+    "Scanning deep orbital resonance patterns...",
+    "Synchronizing astrophysical signal grid...",
+    "Recalibrating detection thresholds..."
+]
+
+st.session_state.tick += 1
+
+new_log = f"🛰️ {random.choice(telemetry_pool)} | T+ {st.session_state.tick}"
+st.session_state.logs.append(new_log)
+st.session_state.logs = st.session_state.logs[-12:]
+
+# =========================
+# METRICS
+# =========================
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Signals", len(df))
+col2.metric("Anomalies", int((df["anomaly"] == -1).sum()))
+col3.metric("Clusters", len(df["cluster"].unique()))
+
+# =========================
+# ORBITAL 3D FIELD
+# =========================
+st.subheader("🪐 ORBITAL SIGNAL FIELD")
 
 theta = np.linspace(0, 20*np.pi, len(df))
+phase = st.session_state.tick * 0.2
 
 fig1 = go.Figure()
 
-for c in sorted(df["cluster"].unique()):
+for c in df["cluster"].unique():
     d = df[df["cluster"] == c]
 
     fig1.add_trace(go.Scatter3d(
-        x=np.cos(theta[:len(d)]) * np.log1p(d["tce_period"]),
-        y=np.sin(theta[:len(d)]) * np.log1p(d["tce_period"]),
+        x=np.cos(theta[:len(d)] + phase) * np.log1p(d["tce_period"]),
+        y=np.sin(theta[:len(d)] + phase) * np.log1p(d["tce_period"]),
         z=d["tce_model_snr"],
         mode="markers",
         marker=dict(
@@ -71,30 +148,26 @@ for c in sorted(df["cluster"].unique()):
         name=f"Cluster {c}"
     ))
 
-# anomalies overlay (RED GLOW EFFECT)
+# anomalies overlay
 anom = df[df["anomaly"] == -1]
 
 fig1.add_trace(go.Scatter3d(
-    x=np.cos(theta[:len(anom)]) * np.log1p(anom["tce_period"]),
-    y=np.sin(theta[:len(anom)]) * np.log1p(anom["tce_period"]),
+    x=np.cos(theta[:len(anom)] + phase) * np.log1p(anom["tce_period"]),
+    y=np.sin(theta[:len(anom)] + phase) * np.log1p(anom["tce_period"]),
     z=anom["tce_model_snr"],
     mode="markers",
-    marker=dict(size=4, color="red", opacity=0.9),
-    name="ANOMALIES"
+    marker=dict(size=4, color="red"),
+    name="Anomalies"
 ))
 
-fig1.update_layout(
-    paper_bgcolor="black",
-    scene=dict(bgcolor="black"),
-    margin=dict(l=0, r=0, t=0, b=0)
-)
+fig1.update_layout(paper_bgcolor="black", scene=dict(bgcolor="black"))
 
 st.plotly_chart(fig1, use_container_width=True)
 
-# =========================================================
-# 🔥 SIGNAL HEATMAP
-# =========================================================
-st.subheader("🔥 SIGNAL INTENSITY FIELD (HEATMAP)")
+# =========================
+# HEATMAP
+# =========================
+st.subheader("🔥 SIGNAL INTENSITY MAP")
 
 fig2 = px.density_heatmap(
     df,
@@ -103,17 +176,14 @@ fig2 = px.density_heatmap(
     color_continuous_scale="Inferno"
 )
 
-fig2.update_layout(
-    paper_bgcolor="black",
-    plot_bgcolor="black"
-)
+fig2.update_layout(paper_bgcolor="black")
 
 st.plotly_chart(fig2, use_container_width=True)
 
-# =========================================================
-# 🧠 CLUSTER INTELLIGENCE MAP (PCA)
-# =========================================================
-st.subheader("🧠 SIGNAL INTELLIGENCE MAP (PCA SPACE)")
+# =========================
+# PCA MAP
+# =========================
+st.subheader("🧠 SIGNAL INTELLIGENCE MAP (PCA)")
 
 fig3 = px.scatter(
     df,
@@ -121,60 +191,52 @@ fig3 = px.scatter(
     y="pc2",
     color=df["cluster"].astype(str),
     symbol=df["anomaly"].apply(lambda x: "Anomaly" if x == -1 else "Normal"),
-    color_discrete_sequence=px.colors.qualitative.G10
 )
 
-fig3.update_layout(
-    paper_bgcolor="black",
-    plot_bgcolor="black"
-)
+fig3.update_layout(paper_bgcolor="black")
 
 st.plotly_chart(fig3, use_container_width=True)
 
-# =========================================================
-# 🚨 ANOMALY RADAR VIEW
-# =========================================================
+# =========================
+# RADAR VIEW
+# =========================
 st.subheader("🚨 ANOMALY RADAR")
 
-angles = np.linspace(0, 2*np.pi, len(features), endpoint=False).tolist()
-angles += angles[:1]
-
-radar_data = df[df["anomaly"] == -1][features].mean().tolist()
-radar_data += radar_data[:1]
+radar_vals = df[df["anomaly"] == -1][features].mean().tolist()
+radar_vals += radar_vals[:1]
 
 fig4 = go.Figure()
 
 fig4.add_trace(go.Scatterpolar(
-    r=radar_data,
+    r=radar_vals,
     theta=features + [features[0]],
-    fill='toself',
-    name='Anomaly Signature',
-    line=dict(color='red')
+    fill="toself",
+    line=dict(color="red"),
+    name="Anomaly Signature"
 ))
 
-fig4.update_layout(
-    polar=dict(bgcolor="black"),
-    paper_bgcolor="black"
-)
+fig4.update_layout(paper_bgcolor="black", polar=dict(bgcolor="black"))
 
 st.plotly_chart(fig4, use_container_width=True)
 
-# =========================================================
-# 📡 LIVE MISSION FEED (NON-REPEATING)
-# =========================================================
+# =========================
+# LIVE TELEMETRY STREAM
+# =========================
 st.subheader("📡 LIVE TELEMETRY STREAM")
 
-logs = [
-    "Scanning deep orbital resonance patterns...",
-    "Filtering cosmic noise interference...",
-    "Recalibrating anomaly detection threshold...",
-    "Mapping exoplanet density clusters...",
-    "Synchronizing astrophysical signal grid...",
-    "Updating orbital trajectory models..."
-]
+for log in reversed(st.session_state.logs):
+    st.write(log)
 
-for i in range(8):
-    st.write("🛰️", np.random.choice(logs), "| T+", i)
-    time.sleep(0.2)
+# =========================
+# SYSTEM EVENTS (FEEL ALIVE)
+# =========================
+if st.session_state.tick % 5 == 0:
+    st.warning("⚠ SYSTEM FLUCTUATION DETECTED")
 
-st.success("MISSION STATUS: STABLE | ANALYSIS COMPLETE")
+if st.session_state.tick % 9 == 0:
+    st.error("🚨 ANOMALY SURGE IN ORBITAL FIELD")
+
+# =========================
+# AUTO REFRESH
+# =========================
+st.autorefresh(interval=1500, key="refresh")
