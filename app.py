@@ -1,184 +1,327 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import time
+import random
 
-# ----------------------------
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import IsolationForest
+
+import plotly.express as px
+import plotly.graph_objects as go
+
+# -----------------------------
 # PAGE CONFIG
-# ----------------------------
+# -----------------------------
 st.set_page_config(
-    page_title="NASA Mission Control V6",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="NASA Mission Control V4",
+    layout="wide"
 )
 
-# ----------------------------
-# CLEAN NASA DARK THEME (NO GLOW)
-# ----------------------------
+# -----------------------------
+# 🌌 GLOWING HUD + STARFIELD (DO NOT REMOVE)
+# -----------------------------
 st.markdown("""
 <style>
-html, body, [class*="css"] {
-    background-color: #02040f;
-    color: #ffffff;
-    font-family: "Segoe UI", sans-serif;
+
+body {
+    background-color: #050814;
+    color: #00ffe1;
 }
 
-/* MAIN DASHBOARD PANEL */
-.main-panel {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 14px;
-    padding: 18px;
+.stApp {
+    background: radial-gradient(circle at top, #050814, #000000);
+    overflow: hidden;
 }
 
-/* SECTION HEADINGS */
+/* STARFIELD BACKGROUND */
+.stApp::before {
+    content: "";
+    position: fixed;
+    width: 200%;
+    height: 200%;
+    background: url("https://raw.githubusercontent.com/JulianLaval/canvas-starfield/master/stars.png");
+    background-size: contain;
+    animation: moveStars 120s linear infinite;
+    opacity: 0.25;
+    z-index: -1;
+}
+
+@keyframes moveStars {
+    from {transform: translateY(0px);}
+    to {transform: translateY(-1000px);}
+}
+
+/* GLOW EFFECT */
 h1, h2, h3 {
-    color: #ffffff !important;
-    font-weight: 600;
+    color: #00ffe1;
+    text-shadow: 0 0 12px #00ffe1;
+    animation: glow 2s infinite;
 }
 
-/* TELEMETRY STYLE */
+@keyframes glow {
+  0% { text-shadow: 0 0 5px #00ffe1; }
+  50% { text-shadow: 0 0 20px #00ffe1; }
+  100% { text-shadow: 0 0 5px #00ffe1; }
+}
+
+div[data-testid="stMetricValue"] {
+    color: #00ffe1;
+    text-shadow: 0 0 10px #00ffe1;
+    animation: glow 1.8s infinite;
+}
+
 .telemetry {
-    font-size: 13px;
-    color: #cfd8dc;
-    line-height: 1.6;
+    font-family: monospace;
+    color: #7df9ff;
+    background: rgba(0,255,255,0.05);
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,255,255,0.3);
 }
 
-/* STATUS BOX */
-.status {
-    padding: 8px;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-}
 </style>
 """, unsafe_allow_html=True)
 
-# ----------------------------
-# HEADER (CLEAN WHITE)
-# ----------------------------
-st.title("🛰️ NASA MISSION CONTROL — FLAGSHIP V6")
-st.caption("Exoplanet Intelligence System | AI Pattern Mining | Orbital Simulation Engine")
+# -----------------------------
+# TITLE
+# -----------------------------
+st.title("🛰️ NASA MISSION CONTROL — FLAGSHIP V4")
+st.subheader("Exoplanet Intelligence System | AI Pattern Mining | Orbital Simulation Engine")
 
-# ----------------------------
-# SIDEBAR ONLY CONTROL
-# ----------------------------
+# -----------------------------
+# FAKE DATA GENERATION
+# -----------------------------
+@st.cache_data
+def generate_data(n=2500):
+    np.random.seed(42)
+    df = pd.DataFrame({
+        "tce_period": np.random.exponential(50, n),
+        "tce_depth": np.random.gamma(2, 5000, n),
+        "tce_duration": np.random.normal(5, 2, n).clip(0.5, 20),
+        "tce_snr": np.random.exponential(10, n)
+    })
+    return df
+
+df = generate_data()
+
+features = ["tce_period", "tce_depth", "tce_duration", "tce_snr"]
+
+# -----------------------------
+# ML PIPELINE
+# -----------------------------
+X = df[features]
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+kmeans = KMeans(n_clusters=4, random_state=42)
+clusters = kmeans.fit_predict(X_scaled)
+
+iso = IsolationForest(contamination=0.05, random_state=42)
+anomaly = iso.fit_predict(X_scaled)
+
+df["cluster"] = clusters
+df["anomaly"] = anomaly
+
+# -----------------------------
+# PCA
+# -----------------------------
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+
+df["pc1"] = X_pca[:, 0]
+df["pc2"] = X_pca[:, 1]
+
+# -----------------------------
+# SIDEBAR CONTROL
+# -----------------------------
 st.sidebar.title("📡 CONTROL PANEL")
 
-mode = st.sidebar.selectbox(
-    "System Mode",
-    ["LIVE ORBIT SIMULATION", "ANALYTICS GRID", "ANOMALY SCAN"]
-)
+scan = st.sidebar.button("🛰️ INITIATE DEEP SPACE SCAN")
 
-st.sidebar.markdown("---")
-st.sidebar.write("System Status: ONLINE")
+if scan:
+    st.sidebar.success("Scanning orbital field...")
+    time.sleep(1)
+    st.sidebar.success("Signal layers analyzed")
+    time.sleep(1)
+    st.sidebar.success("Anomaly map updated")
 
-# ----------------------------
-# FAKE DATA (NO DATASET REQUIRED)
-# ----------------------------
-np.random.seed(42)
-n = 2500
-
-df = pd.DataFrame({
-    "x": np.random.normal(0, 3, n),
-    "y": np.random.normal(0, 3, n),
-    "z": np.random.normal(0, 3, n),
-    "signal": np.random.rand(n) * 100,
-})
-
-df["anomaly"] = np.random.choice([0, 1], size=n, p=[0.95, 0.05])
-
-# ----------------------------
-# METRICS TOP STRIP
-# ----------------------------
+# -----------------------------
+# METRICS
+# -----------------------------
 col1, col2, col3 = st.columns(3)
 
-col1.metric("Signals", "2500")
-col2.metric("Anomalies", "125")
-col3.metric("Clusters", "4")
+col1.metric("Signals", len(df))
+col2.metric("Anomalies", int((anomaly == -1).sum()))
+col3.metric("Clusters", len(np.unique(clusters)))
 
-st.markdown("---")
+# -----------------------------
+# SYSTEM STATUS
+# -----------------------------
+anomaly_rate = (df["anomaly"] == -1).mean()
 
-# ----------------------------
-# MAIN UNIFIED CONSOLE PANEL
-# ----------------------------
-st.markdown("## 🧭 MISSION CONTROL CONSOLE")
+if anomaly_rate < 0.05:
+    status = "🟢 STABLE ORBITAL GRID"
+elif anomaly_rate < 0.1:
+    status = "🟠 MODERATE DISTURBANCE"
+else:
+    status = "🔴 HIGH COSMIC INSTABILITY"
 
-with st.container():
+st.subheader("⚠ SYSTEM STATUS")
+st.write(status)
 
-    st.markdown('<div class="main-panel">', unsafe_allow_html=True)
+# -----------------------------
+# LIVE TELEMETRY STREAM
+# -----------------------------
+st.markdown("## 📡 LIVE TELEMETRY FEED")
 
-    # STATUS
-    st.markdown("### ⚠ System Status")
-    st.markdown('<div class="status">Moderate Disturbance — Active Deep Space Analysis</div>', unsafe_allow_html=True)
+telemetry_box = st.empty()
 
-    st.markdown("---")
+messages = [
+    "Mapping exoplanet probability lattice...",
+    "Filtering deep space interference...",
+    "Recalibrating anomaly thresholds...",
+    "Synchronizing AI detection nodes...",
+    "Scanning stellar resonance patterns...",
+    "Updating orbital trajectory models..."
+]
 
-    # ----------------------------
-    # 3 CORE VISUALS SIDE BY SIDE
-    # ----------------------------
-    a, b, c = st.columns(3)
+logs = []
 
-    with a:
-        st.markdown("### Analytics Grid")
-        fig1 = px.scatter_3d(df, x="x", y="y", z="z", color="signal")
-        st.plotly_chart(fig1, use_container_width=True)
+for t in range(20):
+    logs.append(f"🛰️ {random.choice(messages)} | T+ {t}")
 
-    with b:
-        st.markdown("### Anomaly Scan")
-        fig2 = px.scatter(df, x="x", y="y", color=df["anomaly"].astype(str))
-        st.plotly_chart(fig2, use_container_width=True)
+    telemetry_box.markdown(
+        "<div class='telemetry'>" +
+        "<br>".join(logs[-8:]) +
+        "</div>",
+        unsafe_allow_html=True
+    )
 
-    with c:
-        st.markdown("### Orbital Signal Field")
-        fig3 = px.scatter_3d(df, x="x", y="y", z="z", color=df["anomaly"])
-        st.plotly_chart(fig3, use_container_width=True)
+    time.sleep(0.12)
 
-    st.markdown("---")
+# -----------------------------
+# MISSION EVENT ENGINE
+# -----------------------------
+st.markdown("## 🧠 MISSION EVENT STREAM")
 
-    # ----------------------------
-    # TELEMETRY STREAM (CLEAN)
-    # ----------------------------
-    st.markdown("### 📡 Live Telemetry Feed")
+events = [
+    "Rare signal deviation detected in Cluster 3",
+    "AI recalibrated anomaly detection model",
+    "New orbital resonance pattern identified",
+    "Weak exoplanet candidate flagged",
+    "Signal coherence increasing in PCA space",
+    "Minor instability in high-SNR region"
+]
 
-    telemetry_box = st.empty()
+event_box = st.empty()
 
-    logs = [
-        "Mapping exoplanet probability lattice...",
-        "Filtering deep space interference...",
-        "Recalibrating anomaly thresholds...",
-        "Synchronizing AI detection nodes...",
-        "Scanning stellar resonance patterns...",
-        "Updating orbital trajectory models..."
-    ]
+for i in range(5):
+    event_box.info(random.choice(events))
+    time.sleep(0.5)
 
-    for i in range(1, 20):
-        msg = np.random.choice(logs)
-        telemetry_box.markdown(
-            f"🛰️ {msg} | T+ {i}",
-            unsafe_allow_html=True
-        )
-        time.sleep(0.12)
+# -----------------------------
+# PCA VISUALIZATION
+# -----------------------------
+st.markdown("## 🧠 SIGNAL INTELLIGENCE GRID (PCA)")
 
-    st.markdown("---")
+fig1 = px.scatter(
+    df,
+    x="pc1",
+    y="pc2",
+    color="cluster",
+    opacity=0.6,
+    title="Exoplanet Signal Clusters (PCA SPACE)"
+)
 
-    # ----------------------------
-    # INSIGHT PANEL
-    # ----------------------------
-    st.markdown("### 🧠 Mission Interpretation")
+st.plotly_chart(fig1, use_container_width=True)
 
-    st.markdown("""
-- Signal space forms structured orbital clusters  
-- Dense regions represent stable astrophysical populations  
-- Sparse regions indicate anomaly candidates  
-- PCA reveals hidden geometric structure in signal space  
-- Isolation patterns indicate rare cosmic events  
+# -----------------------------
+# ANOMALY RADAR
+# -----------------------------
+st.markdown("## 🚨 ANOMALY RADAR")
+
+fig2 = px.scatter(
+    df,
+    x="pc1",
+    y="pc2",
+    color=df["anomaly"].map({1: "Normal", -1: "Anomaly"}),
+    opacity=0.6,
+    title="Isolation Forest Anomaly Detection"
+)
+
+st.plotly_chart(fig2, use_container_width=True)
+
+# -----------------------------
+# 3D ORBIT SIMULATION
+# -----------------------------
+st.markdown("## 🪐 ORBITAL SIGNAL FIELD — 3D SPACE")
+
+fig3 = go.Figure(data=[go.Scatter3d(
+    x=df["pc1"],
+    y=df["pc2"],
+    z=df["tce_depth"],
+    mode='markers',
+    marker=dict(
+        size=3,
+        color=clusters,
+        colorscale='Viridis',
+        opacity=0.7
+    )
+)])
+
+fig3.update_layout(
+    paper_bgcolor="black",
+    scene=dict(
+        xaxis=dict(backgroundcolor="black"),
+        yaxis=dict(backgroundcolor="black"),
+        zaxis=dict(backgroundcolor="black")
+    ),
+    margin=dict(l=0, r=0, t=30, b=0),
+    scene_camera=dict(eye=dict(x=1.6, y=1.6, z=1.2))
+)
+
+st.plotly_chart(fig3, use_container_width=True)
+
+# -----------------------------
+# DISCOVERY STATUS PANEL
+# -----------------------------
+st.markdown("## 📡 CURRENT DISCOVERY STATUS")
+
+signal_strength = np.mean(df["tce_snr"])
+
+if anomaly_rate > 0.1:
+    status_msg = "🔴 High anomaly activity — unstable cosmic field"
+elif anomaly_rate > 0.05:
+    status_msg = "🟠 Moderate anomaly presence — monitoring required"
+else:
+    status_msg = "🟢 Stable astrophysical signal environment"
+
+st.success(status_msg)
+
+st.write(f"""
+- Average Signal Strength: {signal_strength:.2f}
+- Anomaly Density: {anomaly_rate:.3f}
+- System Interpretation: Structured exoplanet signal field detected
 """)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+# -----------------------------
+# AI INTERPRETATION
+# -----------------------------
+st.markdown("## 🤖 AI SYSTEM REASONING")
 
-# ----------------------------
-# FINAL STATUS
-# ----------------------------
-st.success("Mission Continuing — Deep Space Analysis Active")
+st.write("""
+The system is analyzing latent astrophysical structure:
+
+- PCA reveals hidden orbital geometry
+- Clustering separates signal populations
+- Isolation Forest detects abnormal cosmic signatures
+
+Conclusion:
+The dataset behaves as a dynamic astrophysical signal field with structured variability.
+""")
+
+st.success("MISSION CONTINUING — DEEP SPACE ANALYSIS ACTIVE 🚀")
