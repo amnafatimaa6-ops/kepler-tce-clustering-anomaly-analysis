@@ -168,4 +168,3 @@ Built as a **space intelligence + AI portfolio project**, combining:
 
 This project demonstrates how raw astronomical data can be transformed into an intelligent simulation system that uncovers hidden structure in the universe using machine learning.
 
-> “We are not just analyzing data — we are decoding the architecture of space itself.”
