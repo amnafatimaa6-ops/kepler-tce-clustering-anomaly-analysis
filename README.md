@@ -6,13 +6,13 @@
 
 ## 🌌 Overview
 
-This project simulates a **NASA-style mission control system** that applies machine learning to real exoplanet detection data from the Kepler Space Telescope.
+This project simulates a **NASA-style mission control system** that applies machine learning techniques to real exoplanet detection data from the Kepler Space Telescope.
 
-It transforms raw astrophysical signals into structured intelligence using clustering, anomaly detection, and dimensionality reduction, all visualized through a cinematic **mission control dashboard interface**.
+It transforms raw astrophysical signals into structured intelligence using clustering, anomaly detection, and dimensionality reduction — all visualized through a cinematic mission control dashboard interface.
 
-The system combines:
-- Data science
-- Machine learning
+The system integrates:
+- Data Science
+- Machine Learning
 - Astrophysics-inspired analysis
 - Interactive visualization
 
@@ -25,25 +25,34 @@ The system combines:
 - DBSCAN for density-based natural clustering
 - Isolation Forest for anomaly detection
 
+---
+
 ### 📊 Data Science Pipeline
 - Data cleaning and feature selection
-- Log transformation for skewed astrophysical signals
+- Handling missing values
+- Log transformation for skewed astrophysical distributions
 - Standard scaling for ML preprocessing
+
+---
 
 ### 🧬 Dimensionality Reduction
 - PCA for 2D signal space projection
 - Visualization of hidden orbital structure
 
+---
+
 ### 📡 Statistical Analysis
-- Hypothesis testing (SNR vs Transit Depth)
+- Hypothesis testing (SNR vs Transit Depth relationship)
 - Feature importance analysis using Random Forest
+
+---
 
 ### 🛰️ Mission Control UI (Streamlit)
 - NASA-style glowing dashboard interface
 - Live telemetry simulation (animated logs)
 - Orbital signal field visualization
 - Anomaly radar system
-- System status monitoring (stable / disturbance / active scan)
+- System status monitoring (Stable / Disturbance / Active Scan)
 
 ---
 
@@ -53,7 +62,7 @@ The system combines:
 - **Size:** 34,032 samples
 - **Features:** 113 astrophysical + instrument-derived parameters
 
-Includes:
+### Includes:
 - Orbital period
 - Transit depth
 - Transit duration
@@ -67,16 +76,16 @@ Includes:
 ### 1. Data Preprocessing
 - Removed metadata and non-physical features
 - Handled missing values
-- Log transformation applied to skewed features
+- Applied log transformation to skewed features
 - Standard scaling for ML compatibility
 
 ### 2. Feature Engineering
-- Selection of key orbital + signal features
+- Selection of key orbital and signal features
 - Transformation of nonlinear distributions
 
 ### 3. Unsupervised Learning
 - KMeans clustering (k=4)
-- DBSCAN density clustering
+- DBSCAN density-based clustering
 - PCA projection for visualization
 
 ### 4. Anomaly Detection
@@ -85,41 +94,41 @@ Includes:
 
 ### 5. Statistical Testing
 - T-test: relationship between SNR and transit depth
-- Feature importance using Random Forest
+- Random Forest feature importance analysis
 
 ---
 
 ## 📊 Key Insights
 
-- Exoplanet signals form **structured orbital clusters**
-- Orbital period is the strongest factor driving structure
-- A small subset of signals are high-intensity anomalies
-- Dataset reflects real astrophysical noise and complexity
+- Exoplanet signals form structured orbital clusters
+- Orbital period is the strongest driver of structural patterns
+- A small subset of signals represent high-intensity anomalies
+- The dataset reflects real astrophysical noise and complexity
 
 ---
 
 ## 🧠 Scientific Interpretation
 
-The dataset behaves like a **latent astrophysical signal field**, where:
+The dataset behaves as a **latent astrophysical signal field**, where:
 
-- Dense clusters → stable planetary systems
-- Sparse regions → rare or anomalous cosmic events
-- PCA reveals hidden orbital geometry
-- ML models uncover non-obvious astrophysical structure
+- Dense clusters → stable planetary systems  
+- Sparse regions → rare or anomalous cosmic events  
+- PCA reveals hidden orbital geometry  
+- Machine learning models uncover non-obvious astrophysical structure  
 
 ---
 
 ## 🛰️ Dashboard Features
 
-The Streamlit mission control interface simulates:
+The Streamlit mission control interface simulates a NASA operations system featuring:
 
-- 📡 Live telemetry feed (streaming logs)
+- 📡 Live telemetry feed (simulated streaming logs)
 - 🪐 Orbital signal field visualization
 - 🧠 PCA intelligence grid
 - 🚨 Anomaly radar system
 - 📊 Cluster analysis panels
-- ⚠ System status indicators (stable / disturbance / scan mode)
-- 🌌 NASA-style glowing HUD interface
+- ⚠ System status indicators (Stable / Disturbance / Scan Mode)
+- 🌌 NASA-inspired glowing HUD interface
 
 ---
 
@@ -130,16 +139,16 @@ The Streamlit mission control interface simulates:
 - Scikit-learn
 - Matplotlib
 - PCA, KMeans, DBSCAN, Isolation Forest
-- Streamlit (dashboard UI)
+- Streamlit
 
 ---
 
 ## 📈 Results Summary
 
-- 4 main signal clusters identified
+- 4 distinct signal clusters identified
 - ~1700 anomalies detected (~5% of dataset)
-- Silhouette Score: ~0.56 (moderate structure quality)
-- Strong statistical link between signal strength and transit depth
+- Silhouette Score: ~0.56 (moderate clustering quality)
+- Strong statistical relationship between signal strength and transit depth
 
 ---
 
@@ -147,9 +156,9 @@ The Streamlit mission control interface simulates:
 
 - Real-time NASA API integration
 - 3D orbital simulation engine
-- Deep learning anomaly detection
+- Deep learning-based anomaly detection
 - Interactive space visualization environment
-- Scalable cloud deployment (Streamlit Cloud / AWS)
+- Cloud deployment (Streamlit Cloud / AWS)
 
 ---
 
@@ -168,3 +177,4 @@ Built as a **space intelligence + AI portfolio project**, combining:
 
 This project demonstrates how raw astronomical data can be transformed into an intelligent simulation system that uncovers hidden structure in the universe using machine learning.
 
+> “We are not just analyzing data — we are decoding the architecture of space itself.”
