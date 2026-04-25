@@ -2,10 +2,13 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import time
+import random
+
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import IsolationForest
+
 import plotly.express as px
 import plotly.graph_objects as go
 
@@ -13,12 +16,12 @@ import plotly.graph_objects as go
 # PAGE CONFIG
 # -----------------------------
 st.set_page_config(
-    page_title="NASA Mission Control V3.2",
+    page_title="NASA Mission Control V4",
     layout="wide"
 )
 
 # -----------------------------
-# 🌌 GLOWING HUD THEME (DO NOT REMOVE)
+# 🌌 GLOWING HUD + STARFIELD (DO NOT REMOVE)
 # -----------------------------
 st.markdown("""
 <style>
@@ -29,9 +32,29 @@ body {
 }
 
 .stApp {
-    background: radial-gradient(circle at top, #0a0f2c, #000000);
+    background: radial-gradient(circle at top, #050814, #000000);
+    overflow: hidden;
 }
 
+/* STARFIELD BACKGROUND */
+.stApp::before {
+    content: "";
+    position: fixed;
+    width: 200%;
+    height: 200%;
+    background: url("https://raw.githubusercontent.com/JulianLaval/canvas-starfield/master/stars.png");
+    background-size: contain;
+    animation: moveStars 120s linear infinite;
+    opacity: 0.25;
+    z-index: -1;
+}
+
+@keyframes moveStars {
+    from {transform: translateY(0px);}
+    to {transform: translateY(-1000px);}
+}
+
+/* GLOW EFFECT */
 h1, h2, h3 {
     color: #00ffe1;
     text-shadow: 0 0 12px #00ffe1;
@@ -45,9 +68,8 @@ h1, h2, h3 {
 }
 
 div[data-testid="stMetricValue"] {
-    font-size: 28px;
     color: #00ffe1;
-    text-shadow: 0 0 12px #00ffe1;
+    text-shadow: 0 0 10px #00ffe1;
     animation: glow 1.8s infinite;
 }
 
@@ -66,7 +88,7 @@ div[data-testid="stMetricValue"] {
 # -----------------------------
 # TITLE
 # -----------------------------
-st.title("🛰️ NASA MISSION CONTROL — V3.2")
+st.title("🛰️ NASA MISSION CONTROL — FLAGSHIP V4")
 st.subheader("Exoplanet Intelligence System | AI Pattern Mining | Orbital Simulation Engine")
 
 # -----------------------------
@@ -114,7 +136,21 @@ df["pc1"] = X_pca[:, 0]
 df["pc2"] = X_pca[:, 1]
 
 # -----------------------------
-# METRICS PANEL
+# SIDEBAR CONTROL
+# -----------------------------
+st.sidebar.title("📡 CONTROL PANEL")
+
+scan = st.sidebar.button("🛰️ INITIATE DEEP SPACE SCAN")
+
+if scan:
+    st.sidebar.success("Scanning orbital field...")
+    time.sleep(1)
+    st.sidebar.success("Signal layers analyzed")
+    time.sleep(1)
+    st.sidebar.success("Anomaly map updated")
+
+# -----------------------------
+# METRICS
 # -----------------------------
 col1, col2, col3 = st.columns(3)
 
@@ -138,7 +174,7 @@ st.subheader("⚠ SYSTEM STATUS")
 st.write(status)
 
 # -----------------------------
-# LIVE TELEMETRY STREAM (CINEMATIC)
+# LIVE TELEMETRY STREAM
 # -----------------------------
 st.markdown("## 📡 LIVE TELEMETRY FEED")
 
@@ -155,8 +191,8 @@ messages = [
 
 logs = []
 
-for t in range(25):
-    logs.append(f"🛰️ {np.random.choice(messages)} | T+ {t}")
+for t in range(20):
+    logs.append(f"🛰️ {random.choice(messages)} | T+ {t}")
 
     telemetry_box.markdown(
         "<div class='telemetry'>" +
@@ -166,6 +202,26 @@ for t in range(25):
     )
 
     time.sleep(0.12)
+
+# -----------------------------
+# MISSION EVENT ENGINE
+# -----------------------------
+st.markdown("## 🧠 MISSION EVENT STREAM")
+
+events = [
+    "Rare signal deviation detected in Cluster 3",
+    "AI recalibrated anomaly detection model",
+    "New orbital resonance pattern identified",
+    "Weak exoplanet candidate flagged",
+    "Signal coherence increasing in PCA space",
+    "Minor instability in high-SNR region"
+]
+
+event_box = st.empty()
+
+for i in range(5):
+    event_box.info(random.choice(events))
+    time.sleep(0.5)
 
 # -----------------------------
 # PCA VISUALIZATION
@@ -231,16 +287,41 @@ fig3.update_layout(
 st.plotly_chart(fig3, use_container_width=True)
 
 # -----------------------------
-# INSIGHT PANEL
+# DISCOVERY STATUS PANEL
 # -----------------------------
-st.markdown("## 🧠 MISSION INTERPRETATION")
+st.markdown("## 📡 CURRENT DISCOVERY STATUS")
+
+signal_strength = np.mean(df["tce_snr"])
+
+if anomaly_rate > 0.1:
+    status_msg = "🔴 High anomaly activity — unstable cosmic field"
+elif anomaly_rate > 0.05:
+    status_msg = "🟠 Moderate anomaly presence — monitoring required"
+else:
+    status_msg = "🟢 Stable astrophysical signal environment"
+
+st.success(status_msg)
+
+st.write(f"""
+- Average Signal Strength: {signal_strength:.2f}
+- Anomaly Density: {anomaly_rate:.3f}
+- System Interpretation: Structured exoplanet signal field detected
+""")
+
+# -----------------------------
+# AI INTERPRETATION
+# -----------------------------
+st.markdown("## 🤖 AI SYSTEM REASONING")
 
 st.write("""
-- Signal space forms structured orbital clusters
-- Dense regions = stable astrophysical populations
-- Sparse regions = rare anomaly candidates
-- PCA reveals hidden geometry of exoplanet detection space
-- Isolation Forest identifies non-conforming cosmic signals
+The system is analyzing latent astrophysical structure:
+
+- PCA reveals hidden orbital geometry
+- Clustering separates signal populations
+- Isolation Forest detects abnormal cosmic signatures
+
+Conclusion:
+The dataset behaves as a dynamic astrophysical signal field with structured variability.
 """)
 
 st.success("MISSION CONTINUING — DEEP SPACE ANALYSIS ACTIVE 🚀")
