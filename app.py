@@ -1,240 +1,237 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
+import time
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import IsolationForest
 import plotly.express as px
 import plotly.graph_objects as go
-import random
 
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
-from sklearn.ensemble import IsolationForest
-from sklearn.decomposition import PCA
-
-# =========================
-# PAGE CONFIG
-# =========================
+# -----------------------------
+# PAGE CONFIG (NASA HUD STYLE)
+# -----------------------------
 st.set_page_config(
-    page_title="NASA MISSION CONTROL V3.1",
-    layout="wide"
+    page_title="NASA Mission Control V3.1",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# =========================
-# 🌌 CINEMATIC SPACE UI
-# =========================
+# -----------------------------
+# COSMIC THEME (CSS HUD GLOW)
+# -----------------------------
 st.markdown("""
 <style>
+body {
+    background-color: #050814;
+    color: #00ffe1;
+}
+
+h1, h2, h3 {
+    color: #00ffe1;
+    text-shadow: 0px 0px 12px #00ffe1;
+}
 
 .stApp {
-    background: radial-gradient(circle at center, #020412, #000000);
-    color: white;
+    background: radial-gradient(circle at top, #0a0f2c, #000000);
 }
 
-/* STARFIELD */
-.stApp::before {
-    content: "";
-    position: fixed;
-    width: 200%;
-    height: 200%;
-    background: url('https://raw.githubusercontent.com/niklasvh/html2canvas/master/examples/assets/starfield.png');
-    opacity: 0.2;
-    animation: moveStars 120s linear infinite;
-    z-index: -1;
+div[data-testid="stMetricValue"] {
+    font-size: 28px;
+    color: #00ffe1;
+    text-shadow: 0 0 10px #00ffe1;
 }
 
-@keyframes moveStars {
-    from {transform: translate(0,0);}
-    to {transform: translate(-600px,-1200px);}
+.block-container {
+    padding-top: 2rem;
 }
 
-/* HUD GLASS PANEL */
-.glass {
-    background: rgba(0,255,255,0.05);
-    border: 1px solid rgba(0,255,255,0.2);
-    border-radius: 12px;
-    padding: 12px;
-    box-shadow: 0 0 18px rgba(0,255,255,0.1);
-}
-
-/* HEADINGS */
-h1, h2, h3 {
-    color: #7ef9ff;
-    text-shadow: 0 0 10px rgba(0,255,255,0.3);
+.telemetry {
     font-family: monospace;
+    color: #7df9ff;
+    background: rgba(0,255,255,0.05);
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,255,255,0.2);
 }
-
 </style>
 """, unsafe_allow_html=True)
 
-# =========================
-# DATA (SIMULATED SAFE MODE)
-# =========================
-np.random.seed(42)
-n = 2500
+# -----------------------------
+# TITLE HEADER
+# -----------------------------
+st.title("🛰️ NASA MISSION CONTROL — V3.1")
+st.subheader("Exoplanet Intelligence System | AI Pattern Mining | Orbital Simulation Engine")
 
-df = pd.DataFrame({
-    "tce_period": np.random.lognormal(3, 1, n),
-    "tce_depth": np.random.lognormal(7, 1.2, n),
-    "tce_duration": np.abs(np.random.normal(5, 2, n)),
-    "tce_model_snr": np.random.lognormal(2, 1, n)
-})
+# -----------------------------
+# SIDEBAR CONTROL PANEL
+# -----------------------------
+st.sidebar.title("📡 CONTROL PANEL")
+mode = st.sidebar.radio("System Mode", ["LIVE ORBIT SIMULATION", "ANALYTICS GRID"])
 
-features = ["tce_period", "tce_depth", "tce_model_snr"]
+# -----------------------------
+# FAKE EXOPLANET DATA (NO FILE NEEDED)
+# -----------------------------
+@st.cache_data
+def generate_data(n=2500):
+    np.random.seed(42)
+    data = pd.DataFrame({
+        "tce_period": np.random.exponential(50, n),
+        "tce_depth": np.random.gamma(2, 5000, n),
+        "tce_duration": np.random.normal(5, 2, n).clip(0.5, 20),
+        "tce_snr": np.random.exponential(10, n)
+    })
+    return data
 
-# =========================
-# ML PIPELINE
-# =========================
+df = generate_data()
+
+features = ["tce_period", "tce_depth", "tce_duration", "tce_snr"]
+
+# -----------------------------
+# PREPROCESSING
+# -----------------------------
 X = df[features]
-X_scaled = StandardScaler().fit_transform(X)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-df["cluster"] = KMeans(n_clusters=4, random_state=42).fit_predict(X_scaled)
-df["anomaly"] = IsolationForest(contamination=0.05, random_state=42).fit_predict(X_scaled)
+# -----------------------------
+# ML MODELS
+# -----------------------------
+kmeans = KMeans(n_clusters=4, random_state=42)
+clusters = kmeans.fit_predict(X_scaled)
 
+iso = IsolationForest(contamination=0.05, random_state=42)
+anomaly = iso.fit_predict(X_scaled)
+
+df["cluster"] = clusters
+df["anomaly"] = anomaly
+
+# -----------------------------
+# PCA REDUCTION
+# -----------------------------
 pca = PCA(n_components=2)
-df["pc1"], df["pc2"] = pca.fit_transform(X_scaled).T
+X_pca = pca.fit_transform(X_scaled)
 
-# =========================
-# TELEMETRY ENGINE
-# =========================
-telemetry_pool = [
-    "Filtering deep space interference...",
+df["pc1"] = X_pca[:, 0]
+df["pc2"] = X_pca[:, 1]
+
+# -----------------------------
+# HUD METRICS
+# -----------------------------
+col1, col2, col3 = st.columns(3)
+col1.metric("Signals", len(df))
+col2.metric("Anomalies", int((anomaly == -1).sum()))
+col3.metric("Clusters", len(np.unique(clusters)))
+
+# -----------------------------
+# FAKE TELEMETRY STREAM
+# -----------------------------
+st.markdown("## 📡 LIVE TELEMETRY FEED")
+
+telemetry_msgs = [
     "Mapping exoplanet probability lattice...",
+    "Filtering deep space interference...",
     "Recalibrating anomaly thresholds...",
     "Synchronizing AI detection nodes...",
-    "Stabilizing orbital resonance field...",
-    "Scanning cosmic signal fluctuations..."
+    "Updating orbital trajectory models...",
+    "Scanning stellar resonance patterns..."
 ]
 
-if "logs" not in st.session_state:
-    st.session_state.logs = []
+log_placeholder = st.empty()
 
-st.session_state.logs.append(f"🛰️ {random.choice(telemetry_pool)} | T+ {len(st.session_state.logs)}")
-st.session_state.logs = st.session_state.logs[-12:]
+logs = []
+for i in range(12):
+    msg = f"🛰️ {np.random.choice(telemetry_msgs)} | T+ {i}"
+    logs.append(msg)
+    log_placeholder.markdown("<div class='telemetry'>" + "<br>".join(logs[-6:]) + "</div>", unsafe_allow_html=True)
+    time.sleep(0.2)
 
-# =========================
-# HEADER
-# =========================
-st.markdown("# 🛰️ NASA MISSION CONTROL — V3.1")
-st.markdown("### Exoplanet Intelligence System | AI Pattern Mining | Orbital Simulation Engine")
-
-st.markdown("---")
-
-# =========================
-# METRICS
-# =========================
-anom = int((df["anomaly"] == -1).sum())
-
-col1, col2, col3 = st.columns(3)
-
-col1.metric("Signals", len(df))
-col2.metric("Anomalies", anom)
-col3.metric("Clusters", len(df["cluster"].unique()))
-
-# =========================
-# STATUS LOGIC
-# =========================
-if anom > 180:
-    status = "🔴 CRITICAL ANOMALY FIELD"
-elif anom > 120:
-    status = "🟠 HIGH DISTURBANCE"
-elif anom > 70:
-    status = "🟡 MODERATE FLUCTUATION"
-else:
-    status = "🟢 STABLE OBSERVATION GRID"
-
-st.markdown(f"### ⚠ SYSTEM STATUS: {status}")
-
-# =========================
-# MISSION STATUS HUD
-# =========================
-st.markdown("""
-<div class="glass">
-<h3>🛰️ MISSION STATUS</h3>
-Orbital systems online • AI detection active • Deep space scanning in progress
-</div>
-""", unsafe_allow_html=True)
-
-# =========================
-# ORBIT VISUAL (3D)
-# =========================
-st.markdown("## 🪐 ORBITAL SIGNAL FIELD")
-
-theta = np.linspace(0, 20*np.pi, len(df))
-
-fig = go.Figure()
-
-for c in df["cluster"].unique():
-    d = df[df["cluster"] == c]
-
-    fig.add_trace(go.Scatter3d(
-        x=np.cos(theta[:len(d)]) * np.log1p(d["tce_period"]),
-        y=np.sin(theta[:len(d)]) * np.log1p(d["tce_period"]),
-        z=d["tce_model_snr"],
-        mode="markers",
-        marker=dict(size=3),
-        name=f"Cluster {c}"
-    ))
-
-anom_df = df[df["anomaly"] == -1]
-
-fig.add_trace(go.Scatter3d(
-    x=np.cos(theta[:len(anom_df)]) * np.log1p(anom_df["tce_period"]),
-    y=np.sin(theta[:len(anom_df)]) * np.log1p(anom_df["tce_period"]),
-    z=anom_df["tce_model_snr"],
-    mode="markers",
-    marker=dict(size=5, color="red"),
-    name="Anomalies"
-))
-
-fig.update_layout(
-    paper_bgcolor="black",
-    scene=dict(bgcolor="black")
-)
-
-st.plotly_chart(fig, use_container_width=True)
-
-# =========================
-# PCA INTELLIGENCE MAP
-# =========================
+# -----------------------------
+# ORBITAL 2D SIGNAL MAP
+# -----------------------------
 st.markdown("## 🧠 SIGNAL INTELLIGENCE GRID (PCA)")
+
+fig1 = px.scatter(
+    df,
+    x="pc1",
+    y="pc2",
+    color="cluster",
+    title="Exoplanet Signal Clusters (PCA SPACE)",
+    opacity=0.6
+)
+st.plotly_chart(fig1, use_container_width=True)
+
+# -----------------------------
+# ANOMALY RADAR
+# -----------------------------
+st.markdown("## 🚨 ANOMALY RADAR")
 
 fig2 = px.scatter(
     df,
     x="pc1",
     y="pc2",
-    color=df["cluster"].astype(str),
-    opacity=0.6
+    color=df["anomaly"].map({1: "Normal", -1: "Anomaly"}),
+    title="Isolation Forest Anomaly Detection",
+    opacity=0.5
 )
-
-fig2.update_layout(paper_bgcolor="black")
-
 st.plotly_chart(fig2, use_container_width=True)
 
-# =========================
-# HEATMAP
-# =========================
-st.markdown("## 🔥 SIGNAL INTENSITY FIELD")
+# -----------------------------
+# 3D ORBIT SIMULATION
+# -----------------------------
+st.markdown("## 🪐 ORBITAL SIGNAL FIELD — 3D SPACE")
 
-fig3 = px.density_heatmap(df, x="tce_period", y="tce_depth", color_continuous_scale="Inferno")
+fig3 = go.Figure(data=[go.Scatter3d(
+    x=df["pc1"],
+    y=df["pc2"],
+    z=df["tce_depth"],
+    mode='markers',
+    marker=dict(
+        size=3,
+        color=clusters,
+        colorscale='Viridis',
+        opacity=0.7
+    )
+)])
 
-fig3.update_layout(paper_bgcolor="black")
+fig3.update_layout(
+    title="3D Exoplanet Orbital Simulation",
+    paper_bgcolor="black",
+    scene=dict(
+        xaxis_title="PC1",
+        yaxis_title="PC2",
+        zaxis_title="Signal Depth"
+    )
+)
 
 st.plotly_chart(fig3, use_container_width=True)
 
-# =========================
-# TELEMETRY STREAM (CINEMATIC HUD)
-# =========================
-st.markdown("## 📡 LIVE TELEMETRY FEED")
+# -----------------------------
+# LIVE STATUS PANEL
+# -----------------------------
+st.markdown("## ⚠ SYSTEM STATUS")
 
-for log in reversed(st.session_state.logs):
-    st.markdown(f"""
-    <div class="glass">
-    🛰️ {log}
-    </div>
-    """, unsafe_allow_html=True)
+status = "🟢 STABLE ORBITAL GRID"
 
-# =========================
-# FOOTER STATUS
-# =========================
-st.markdown("---")
+if (anomaly == -1).sum() > 150:
+    status = "🟠 HIGH DISTURBANCE"
+if (anomaly == -1).sum() > 300:
+    status = "🔴 CRITICAL SIGNAL INSTABILITY"
 
-st.success("🟢 MISSION CONTINUING — DEEP SPACE ANALYSIS ACTIVE")
+st.subheader(status)
+
+# -----------------------------
+# INSIGHT PANEL
+# -----------------------------
+st.markdown("## 🧠 MISSION INTERPRETATION")
+
+st.write("""
+- Signal space forms structured orbital clusters
+- Dense regions = stable astrophysical populations
+- Sparse regions = rare anomaly candidates
+- PCA projection reveals hidden signal geometry
+- Isolation Forest detects non-conforming cosmic events
+""")
+
+st.success("MISSION CONTINUING — DEEP SPACE ANALYSIS ACTIVE 🚀")
