@@ -1,41 +1,35 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.express as px
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.ensemble import IsolationForest
-from sklearn.decomposition import PCA
 
 # ----------------------------
 # PAGE CONFIG
 # ----------------------------
 st.set_page_config(
-    page_title="Exoplanet Signal Intelligence System",
+    page_title="Exoplanet Intelligence System",
     layout="wide"
 )
 
-st.title("🌌 Exoplanet Signal Intelligence Dashboard")
-st.caption("Simulated NASA Kepler-like TCE Pattern Analysis")
+st.title("🌌 Exoplanet Signal Intelligence System")
+st.caption("3D NASA-style Unsupervised Learning Explorer")
 
 # ----------------------------
-# SYNTHETIC DATA GENERATOR
+# SYNTHETIC DATA
 # ----------------------------
 @st.cache_data
-def generate_data(n=5000):
+def generate_data(n=4000):
     np.random.seed(42)
 
-    period = np.random.lognormal(mean=3, sigma=1, size=n)
-    depth = np.random.lognormal(mean=7, sigma=1.2, size=n)
-    duration = np.random.normal(loc=5, scale=2, size=n)
-    snr = np.random.lognormal(mean=2, sigma=1, size=n)
-
     df = pd.DataFrame({
-        "tce_period": period,
-        "tce_depth": depth,
-        "tce_duration": np.abs(duration),
-        "tce_model_snr": snr
+        "tce_period": np.random.lognormal(3, 1, n),
+        "tce_depth": np.random.lognormal(7, 1.2, n),
+        "tce_duration": np.abs(np.random.normal(5, 2, n)),
+        "tce_model_snr": np.random.lognormal(2, 1, n)
     })
 
     return df
@@ -45,90 +39,73 @@ df = generate_data()
 features = ["tce_period", "tce_depth", "tce_duration", "tce_model_snr"]
 
 # ----------------------------
-# NAVIGATION
+# SIDEBAR
 # ----------------------------
-menu = st.sidebar.radio(
+page = st.sidebar.radio(
     "Navigation",
-    ["Overview", "Signal Distributions", "Clustering", "Anomaly Detection"]
+    ["Overview", "3D Clustering", "3D Anomalies"]
 )
 
 # ----------------------------
 # OVERVIEW
 # ----------------------------
-if menu == "Overview":
-    st.header("📊 Synthetic Exoplanet Dataset Overview")
+if page == "Overview":
+    st.header("📊 System Overview")
 
     col1, col2, col3 = st.columns(3)
-    col1.metric("Samples", df.shape[0])
+    col1.metric("Signals", len(df))
     col2.metric("Features", len(features))
-    col3.metric("System", "Kepler-like Simulation")
+    col3.metric("Mode", "Simulation + ML")
 
     st.dataframe(df.head())
 
     st.markdown("""
-    ### 🧠 Scientific Context
-    This dashboard simulates exoplanet transit-like signals to demonstrate:
-    - Orbital pattern clustering
-    - Signal strength variation
-    - Detection anomalies
+    ### 🧠 Scientific Goal
+    To simulate and analyze exoplanet-like signals and extract hidden structure using unsupervised learning.
     """)
 
 # ----------------------------
-# DISTRIBUTIONS
+# 3D CLUSTERING
 # ----------------------------
-elif menu == "Signal Distributions":
-    st.header("📈 Signal Behaviour Analysis")
-
-    feature = st.selectbox("Select Feature", features)
-
-    data = np.log1p(df[feature])
-
-    fig, ax = plt.subplots()
-    ax.hist(data, bins=60)
-    ax.set_title(f"Distribution: {feature}")
-
-    st.pyplot(fig)
-
-    st.markdown("""
-    **Interpretation:**  
-    Signal distributions are heavily skewed, reflecting real astrophysical detection bias patterns.
-    """)
-
-# ----------------------------
-# CLUSTERING
-# ----------------------------
-elif menu == "Clustering":
-    st.header("🧠 Exoplanet Signal Clustering (KMeans)")
+elif page == "3D Clustering":
+    st.header("🧠 3D Exoplanet Clustering Space")
 
     X = df[features]
 
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    k = st.slider("Number of Clusters", 2, 6, 4)
+    k = st.slider("Clusters", 2, 6, 4)
 
     model = KMeans(n_clusters=k, random_state=42)
     clusters = model.fit_predict(X_scaled)
 
-    pca = PCA(n_components=2)
-    X_pca = pca.fit_transform(X_scaled)
+    plot_df = df.copy()
+    plot_df["cluster"] = clusters
 
-    fig, ax = plt.subplots()
-    ax.scatter(X_pca[:, 0], X_pca[:, 1], c=clusters, s=8)
-    ax.set_title("Cluster Structure (PCA Projection)")
+    fig = px.scatter_3d(
+        plot_df,
+        x="tce_period",
+        y="tce_depth",
+        z="tce_model_snr",
+        color="cluster",
+        size="tce_duration",
+        opacity=0.7,
+        title="3D Cluster Space of Exoplanet Signals"
+    )
 
-    st.pyplot(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("""
     ### 🔍 Insight
-    The dataset forms separable structural regimes driven primarily by orbital period and signal intensity.
+    The system reveals separable structural regimes in 3D signal space, driven primarily by orbital period and signal intensity.
     """)
 
 # ----------------------------
-# ANOMALY DETECTION
+# 3D ANOMALIES
 # ----------------------------
-elif menu == "Anomaly Detection":
-    st.header("⚠️ Rare Signal Detection")
+elif page == "3D Anomalies":
+    st.header("⚠️ 3D Anomaly Detection Space")
 
     X = df[features]
 
@@ -138,21 +115,25 @@ elif menu == "Anomaly Detection":
     iso = IsolationForest(contamination=0.05, random_state=42)
     labels = iso.fit_predict(X_scaled)
 
-    pca = PCA(n_components=2)
-    X_pca = pca.fit_transform(X_scaled)
+    plot_df = df.copy()
+    plot_df["anomaly"] = labels
 
-    fig, ax = plt.subplots()
-    ax.scatter(X_pca[:, 0], X_pca[:, 1], c=labels, s=8)
-    ax.set_title("Anomaly Landscape")
+    fig = px.scatter_3d(
+        plot_df,
+        x="tce_period",
+        y="tce_depth",
+        z="tce_model_snr",
+        color=plot_df["anomaly"].astype(str),
+        size="tce_duration",
+        opacity=0.7,
+        title="3D Anomaly Landscape"
+    )
 
-    st.pyplot(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
-    st.write("🚨 Anomalies detected:", (labels == -1).sum())
+    st.write("🚨 Anomalies detected:", sum(labels == -1))
 
     st.markdown("""
     ### 🧠 Interpretation
-    Anomalies represent statistically rare signal configurations potentially analogous to:
-    - extreme orbital systems
-    - detection noise extremes
-    - rare astrophysical events
+    Anomalous points represent rare or extreme signal configurations that deviate from typical exoplanet-like patterns.
     """)
