@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
-import time
 import random
 
 from sklearn.preprocessing import StandardScaler
@@ -20,7 +19,7 @@ st.set_page_config(
 )
 
 # =========================
-# UI STYLE (SPACE THEME)
+# SPACE THEME UI
 # =========================
 st.markdown("""
 <style>
@@ -43,7 +42,7 @@ h1, h2, h3 {
 """, unsafe_allow_html=True)
 
 # =========================
-# SESSION STATE (IMPORTANT FIX)
+# SESSION STATE (LIVE SYSTEM MEMORY)
 # =========================
 if "tick" not in st.session_state:
     st.session_state.tick = 0
@@ -79,6 +78,7 @@ df["anomaly"] = IsolationForest(contamination=0.05, random_state=42).fit_predict
 # PCA
 pca = PCA(n_components=2)
 X_pca = pca.fit_transform(X_scaled)
+
 df["pc1"] = X_pca[:, 0]
 df["pc2"] = X_pca[:, 1]
 
@@ -86,7 +86,7 @@ df["pc2"] = X_pca[:, 1]
 # TITLE
 # =========================
 st.title("🛰️ NASA MISSION CONTROL — SIMULATOR v2")
-st.caption("Exoplanet Signal Intelligence + Live Telemetry + AI Pattern Mining")
+st.caption("Exoplanet Signal Intelligence System | AI Pattern Mining | Orbital Simulation")
 
 # =========================
 # CONTROL PANEL
@@ -95,8 +95,10 @@ st.sidebar.title("📡 CONTROL PANEL")
 mode = st.sidebar.radio("System Mode", ["LIVE ORBIT SIMULATION", "MISSION LOGS"])
 
 # =========================
-# LIVE TELEMETRY ENGINE
+# LIVE SYSTEM TICK
 # =========================
+st.session_state.tick += 1
+
 telemetry_pool = [
     "Mapping exoplanet density clusters...",
     "Filtering cosmic noise interference...",
@@ -106,14 +108,12 @@ telemetry_pool = [
     "Recalibrating detection thresholds..."
 ]
 
-st.session_state.tick += 1
-
 new_log = f"🛰️ {random.choice(telemetry_pool)} | T+ {st.session_state.tick}"
 st.session_state.logs.append(new_log)
 st.session_state.logs = st.session_state.logs[-12:]
 
 # =========================
-# METRICS
+# METRICS PANEL
 # =========================
 col1, col2, col3 = st.columns(3)
 
@@ -121,10 +121,15 @@ col1.metric("Signals", len(df))
 col2.metric("Anomalies", int((df["anomaly"] == -1).sum()))
 col3.metric("Clusters", len(df["cluster"].unique()))
 
+st.markdown(f"""
+### ⏱️ MISSION TIME: T+ {st.session_state.tick}
+### 🛰️ SYSTEM STATUS: ACTIVE OBSERVATION GRID
+""")
+
 # =========================
-# ORBITAL 3D FIELD
+# ORBIT SIMULATION
 # =========================
-st.subheader("🪐 ORBITAL SIGNAL FIELD")
+st.subheader("🪐 ORBITAL SIGNAL FIELD — DEEP SPACE VIEW")
 
 theta = np.linspace(0, 20*np.pi, len(df))
 phase = st.session_state.tick * 0.2
@@ -148,7 +153,7 @@ for c in df["cluster"].unique():
         name=f"Cluster {c}"
     ))
 
-# anomalies overlay
+# anomalies (red layer)
 anom = df[df["anomaly"] == -1]
 
 fig1.add_trace(go.Scatter3d(
@@ -157,17 +162,20 @@ fig1.add_trace(go.Scatter3d(
     z=anom["tce_model_snr"],
     mode="markers",
     marker=dict(size=4, color="red"),
-    name="Anomalies"
+    name="ANOMALIES"
 ))
 
-fig1.update_layout(paper_bgcolor="black", scene=dict(bgcolor="black"))
+fig1.update_layout(
+    paper_bgcolor="black",
+    scene=dict(bgcolor="black")
+)
 
 st.plotly_chart(fig1, use_container_width=True)
 
 # =========================
 # HEATMAP
 # =========================
-st.subheader("🔥 SIGNAL INTENSITY MAP")
+st.subheader("🔥 SIGNAL INTENSITY FIELD")
 
 fig2 = px.density_heatmap(
     df,
@@ -181,7 +189,7 @@ fig2.update_layout(paper_bgcolor="black")
 st.plotly_chart(fig2, use_container_width=True)
 
 # =========================
-# PCA MAP
+# PCA INTELLIGENCE MAP
 # =========================
 st.subheader("🧠 SIGNAL INTELLIGENCE MAP (PCA)")
 
@@ -198,7 +206,7 @@ fig3.update_layout(paper_bgcolor="black")
 st.plotly_chart(fig3, use_container_width=True)
 
 # =========================
-# RADAR VIEW
+# ANOMALY RADAR
 # =========================
 st.subheader("🚨 ANOMALY RADAR")
 
@@ -215,7 +223,10 @@ fig4.add_trace(go.Scatterpolar(
     name="Anomaly Signature"
 ))
 
-fig4.update_layout(paper_bgcolor="black", polar=dict(bgcolor="black"))
+fig4.update_layout(
+    paper_bgcolor="black",
+    polar=dict(bgcolor="black")
+)
 
 st.plotly_chart(fig4, use_container_width=True)
 
@@ -228,7 +239,7 @@ for log in reversed(st.session_state.logs):
     st.write(log)
 
 # =========================
-# SYSTEM EVENTS (FEEL ALIVE)
+# SYSTEM EVENTS
 # =========================
 if st.session_state.tick % 5 == 0:
     st.warning("⚠ SYSTEM FLUCTUATION DETECTED")
@@ -237,6 +248,7 @@ if st.session_state.tick % 9 == 0:
     st.error("🚨 ANOMALY SURGE IN ORBITAL FIELD")
 
 # =========================
-# AUTO REFRESH
+# MANUAL REFRESH (SAFE)
 # =========================
-st.autorefresh(interval=1500, key="refresh")
+if st.button("🔄 Pulse Mission Update"):
+    st.rerun()
