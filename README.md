@@ -21,6 +21,15 @@ The system integrates:
 
 https://kepler-tce-clustering-anomaly-analysis-v69ajwnosl7nesjkkhuappg.streamlit.app/
 
+### 📸 Demo 1
+![Demo 1](demo1.gif)
+
+
+
+### 📸 Demo 2
+![Demo 2](demo2.gif)
+
+
 ---
 
 ## 🚀 Key Features
